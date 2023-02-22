@@ -1,2 +1,2 @@
 # Organ-Transplant-Analysis-UNOS
-Power of Machine Learning
+This is a CSC695 Organ Transplant Analysis project currently I am working on. For this project, we will use the UNOS dataset which contains a plenty of information about the donor and recepient charactersitcs as well as the time period associted with them. 
