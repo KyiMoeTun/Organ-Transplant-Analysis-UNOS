@@ -5,6 +5,7 @@ library(haven)
 library(readr)
 library(XML)
 library(rvest)
+library(tibble)
 
 
 # GETTING THE COLUMN NAMES FROM Liver DATA
@@ -58,10 +59,46 @@ liver <- read.delim(file_path_liver, sep = "\t", header=TRUE, na.strings=c('.', 
 colnames(liver) <- labels2
 
 #show the size of the data
-dim(liver)
+dim(dcs_dnr)
 ncol(liver)
 
 #show the data
 head(dcs_dnr)
 
+#select the columns we need
+liver_data <- liver %>% select("ALBUMIN_TX","ASCITES_TX","BW4","BW6","C1","C2", "CREAT_TX", # nolint
+          "DQ1","DQ2","DR51","DR51_2","DR52", "DR52_2","DR53","DR53_2","ENCEPH_TX", "FINAL_ALBUMIN","FINAL_ASCITES", # nolint
+          "FINAL_BILIRUBIN", "FINAL_CTP_SCORE","FINAL_DIALYSIS_PRIOR_WEEK", "FINAL_ENCEPH","FINAL_INR","FINAL_MELD_OR_PELD",  # nolint
+          "FINAL_MELD_PELD_LAB_SCORE","FINAL_SERUM_CREAT", "FINAL_SERUM_SODIUM", "INIT_ALBUMIN","INIT_ASCITES", "INIT_BILIRUBIN", # nolint
+          "INIT_CTP_SCORE", "INIT_MELD_PELD_LAB_SCORE",
+          "INIT_SERUM_CREAT",
+          "INIT_SERUM_SODIUM",
+          "INR_TX",
+          "NUM_PREV_TX",
+          "REM_CD", "TBILI_TX", "TRR_ID_CODE")
+
+#show the dataframe
+head(liver_data)
+
+table(liver$REM_CD)
+
+# Compute proportion of missing values for each column
+missing_prop <- colSums(is.na(liver)) / nrow(liver)
+
+# Create a table with the variable names and the proportion of missing values
+missing_table <- tibble(
+  variables = names(liver),
+  percent_missing = round(colSums(is.na(liver)) / nrow(liver) * 100, 2)
+) %>% 
+  arrange(desc(percent_missing))
+
+
+
+# Get column names with missing values greater than 40 percent
+remove_cols <- names(which(missing_prop > 0.4))
+
+# Remove columns from the dataset
+liver_filtered <- liver[, !(names(liver) %in% remove_cols)]
+
+table(liver$ENCEPH_TX)
 
