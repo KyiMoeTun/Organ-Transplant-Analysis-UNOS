@@ -102,3 +102,4 @@ liver_filtered <- liver[, !(names(liver) %in% remove_cols)]
 
 table(liver$ENCEPH_TX)
 
+table(liver_filtered$ENCEPH_TX)
