@@ -1,3 +1,15 @@
+
+rm(list = ls()) # clear global environment
+graphics.off() # close all graphics
+if (require(pacman) == FALSE) install.packages("pacman")
+
+#load and install packages using pacman
+#p_load()
+
+#directory for the custom functions
+source("https://raw.githubusercontent.com/Ying-Ju/heart_transplant.github.io/master/custom_functions.R") # nolint: line_length_linter.
+
+
 library(dplyr)
 library(tidyverse)
 library(survival)
@@ -65,23 +77,6 @@ ncol(liver)
 #show the data
 head(dcs_dnr)
 
-#select the columns we need
-liver_data <- liver %>% select("ALBUMIN_TX","ASCITES_TX","BW4","BW6","C1","C2", "CREAT_TX", # nolint
-          "DQ1","DQ2","DR51","DR51_2","DR52", "DR52_2","DR53","DR53_2","ENCEPH_TX", "FINAL_ALBUMIN","FINAL_ASCITES", # nolint
-          "FINAL_BILIRUBIN", "FINAL_CTP_SCORE","FINAL_DIALYSIS_PRIOR_WEEK", "FINAL_ENCEPH","FINAL_INR","FINAL_MELD_OR_PELD",  # nolint
-          "FINAL_MELD_PELD_LAB_SCORE","FINAL_SERUM_CREAT", "FINAL_SERUM_SODIUM", "INIT_ALBUMIN","INIT_ASCITES", "INIT_BILIRUBIN", # nolint
-          "INIT_CTP_SCORE", "INIT_MELD_PELD_LAB_SCORE",
-          "INIT_SERUM_CREAT",
-          "INIT_SERUM_SODIUM",
-          "INR_TX",
-          "NUM_PREV_TX",
-          "REM_CD", "TBILI_TX", "TRR_ID_CODE")
-
-#show the dataframe
-head(liver_data)
-
-table(liver$REM_CD)
-
 # Compute proportion of missing values for each column
 missing_prop <- colSums(is.na(liver)) / nrow(liver)
 
@@ -92,6 +87,28 @@ missing_table <- tibble(
 ) %>% 
   arrange(desc(percent_missing))
 
+#assigning the row names to the column for tracking train/test purposes
+liver$ID <- row.names(liver)
+
+# Use sapply() and class() to get the data types of each column
+data_types <- sapply(liver, class)
+
+#getting the count of data types
+table(data_types)
+
+### INCLUSION EXCLUSION CRITERIA
+#filtering to keep onlly the adult patients
+temp <- liver %>% subset(AGE >= 18)  %>% subset(AGE_DON >= 18)
+
+
+#there were two start dates in the data, so I decided to use the first one
+#liver$`VAR START DATE`[51] <- "1990-10-01"
+
+
+
+
+
+
 
 
 # Get column names with missing values greater than 40 percent
@@ -101,4 +118,16 @@ remove_cols <- names(which(missing_prop > 0.4))
 liver_filtered <- liver[, !(names(liver) %in% remove_cols)]
 
 table(liver$ENCEPH_TX)
+
+table(liver_filtered$ENCEPH_TX)
+
+
+sum(is.na(liver$COD))
+
+#getting the count of unique values in the column
+table(liver$COD)
+
+table(dcs_dnr$COD_CAD_DON)
+liver$PTIME
+
 
