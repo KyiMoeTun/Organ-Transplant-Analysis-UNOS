@@ -77,15 +77,7 @@ ncol(liver)
 #show the data
 head(dcs_dnr)
 
-# Compute proportion of missing values for each column
-missing_prop <- colSums(is.na(liver)) / nrow(liver)
 
-# Create a table with the variable names and the proportion of missing values
-missing_table <- tibble(
-  variables = names(liver),
-  percent_missing = round(colSums(is.na(liver)) / nrow(liver) * 100, 2)
-) %>% 
-  arrange(desc(percent_missing))
 
 #assigning the row names to the column for tracking train/test purposes
 liver$ID <- row.names(liver)
@@ -97,22 +89,42 @@ data_types <- sapply(liver, class)
 table(data_types)
 
 ### INCLUSION EXCLUSION CRITERIA
-#filtering to keep onlly the adult patients
+#filtering to keep only the adult patients
 temp <- liver %>% subset(AGE >= 18)  %>% subset(AGE_DON >= 18)
 
+#removing the observations with misssing graft status and graft time
+temp %<>% dplyr::filter(!is.na(GSTATUS) & !is.na(GTIME))
+
+#check if transplant date column has missing values
+sum(is.na(temp$TX_DATE))
+
+# Convert TX_DATE column in temp dataframe to POSIXct format
+temp$date_time <- as.POSIXct(temp$TX_DATE, format = "%m/%d/%Y")
+class(temp$date_time)
+
+#selecting observations with transplant date after 2000
+temp_new <- subset(temp, year(date_time) > 2000)
+dim(temp_new)
+
+
+# Compute proportion of missing values for each column
+missing_prop <- colSums(is.na(temp)) / nrow(temp)
+
+# Create a table with the variable names and the proportion of missing values
+missing_table <- tibble(
+  variables = names(temp),
+  percent_missing = round(colSums(is.na(temp)) / nrow(temp) * 100, 2)
+) %>% 
+  arrange(desc(percent_missing))
+
+# Get column names with missing values greater than 40 percent
+remove_cols <- names(which(missing_prop > 0.4))
 
 #there were two start dates in the data, so I decided to use the first one
 #liver$`VAR START DATE`[51] <- "1990-10-01"
 
 
 
-
-
-
-
-
-# Get column names with missing values greater than 40 percent
-remove_cols <- names(which(missing_prop > 0.4))
 
 # Remove columns from the dataset
 liver_filtered <- liver[, !(names(liver) %in% remove_cols)]
