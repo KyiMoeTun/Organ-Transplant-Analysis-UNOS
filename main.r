@@ -4,7 +4,10 @@ graphics.off() # close all graphics
 if (require(pacman) == FALSE) install.packages("pacman")
 
 #load and install packages using pacman
-#p_load()
+pacman::p_load(AUC, Biocomb, car, caret, conflicted, DataExplorer, # important for exploratory data analysis 
+               dataPreparation, data.table, DT, haven, magrittr, mltools, party, readxl, tidyverse, # important analytic packages
+                snow, varImp
+)
 
 #directory for the custom functions
 source("https://raw.githubusercontent.com/Ying-Ju/heart_transplant.github.io/master/custom_functions.R") # nolint: line_length_linter.
@@ -77,8 +80,6 @@ ncol(liver)
 #show the data
 head(dcs_dnr)
 
-
-
 #assigning the row names to the column for tracking train/test purposes
 liver$ID <- row.names(liver)
 
@@ -102,9 +103,35 @@ sum(is.na(temp$TX_DATE))
 temp$date_time <- as.POSIXct(temp$TX_DATE, format = "%m/%d/%Y")
 class(temp$date_time)
 
-#selecting observations with transplant date after 2000
+'''  # nolint
+selecting observations with transplant date after 2000
 temp_new <- subset(temp, year(date_time) > 2000)
 dim(temp_new)
+'''
+xls_path <- '/Users/kyimoetun/Downloads/UNOS/IMPORTANT DOCUMENTATION/STAR File Documentation.xlsx' # nolint
+
+varInfo <- read_excel(xls_path, sheet = "LIVER DATA", skip =1,  # nolint
+                        col_types = c(rep("text", 3),
+                        rep("date", 2), rep("guess", 7)))
+
+# CMV_DON seems to have two start dates, 01-Oct-87 and 01-Oct-90
+# We will only use 01-Oct-90 for the start date.
+
+varInfo$`VAR START DATE`[51] <- "1990-10-01"
+
+#any variable having end date will be removed
+selected_rows <- is.na(varInfo$`VAR END DATE`)
+#the reason we are doing this is because those variables
+#will not be included in future data
+#there are 43 variables having VAR END DATE
+vars_to_include <- varInfo[selected_rows, 1]
+# Extract the column as a vector
+cols_to_include <- as.vector(vars_to_include$'VARIABLE NAME')
+# Select only columns with names included in the vector list
+temp_df <- dplyr::select(temp, which(names(temp) %in% cols_to_include))
+
+
+
 
 
 # Compute proportion of missing values for each column
@@ -122,6 +149,9 @@ remove_cols <- names(which(missing_prop > 0.4))
 
 #there were two start dates in the data, so I decided to use the first one
 #liver$`VAR START DATE`[51] <- "1990-10-01"
+
+
+
 
 
 
