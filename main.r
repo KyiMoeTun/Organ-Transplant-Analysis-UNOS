@@ -1,4 +1,3 @@
-
 rm(list = ls()) # clear global environment
 graphics.off() # close all graphics
 if (require(pacman) == FALSE) install.packages("pacman")
@@ -21,6 +20,7 @@ library(readr)
 library(XML)
 library(rvest)
 library(tibble)
+library(ggplot2)
 
 
 # GETTING THE COLUMN NAMES FROM Liver DATA
@@ -131,29 +131,79 @@ cols_to_include <- as.vector(vars_to_include$'VARIABLE NAME')
 temp_df <- dplyr::select(temp, which(names(temp) %in% cols_to_include))
 
 
-
-
-
 # Compute proportion of missing values for each column
-missing_prop <- colSums(is.na(temp)) / nrow(temp)
+missing_prop <- colSums(is.na(temp_df)) / nrow(temp_df)
 
 # Create a table with the variable names and the proportion of missing values
 missing_table <- tibble(
-  variables = names(temp),
-  percent_missing = round(colSums(is.na(temp)) / nrow(temp) * 100, 2)
+  variables = names(temp_df),
+  percent_missing = round(colSums(is.na(temp_df)) / nrow(temp_df) * 100, 2)
 ) %>% 
   arrange(desc(percent_missing))
 
 # Get column names with missing values greater than 40 percent
-remove_cols <- names(which(missing_prop > 0.4))
+remove_cols <- names(which(missing_prop > 0.9))
+
+# Remove columns from dataframe
+temp_df <- temp_df %>% select(-all_of(remove_cols))
+
+# factoring the categorical variables
+temp_df$CITIZENSHIP <-  as.factor(temp_df$CITIZENSHIP)
+temp_df$CITIZENSHIP <-  factor(temp_df$CITIZENSHIP, levels = c(1, 2, 3, 4, 5))
+temp_df$CITIZENSHIP <- factor(temp_df$CITIZENSHIP ,
+                                labels = c("US Citizen", "Resident Alien",
+                                "Non-Resident Alien Specify Country",
+                                "Non-US Citizen/US Resident",
+                                "Non-US Citizen/Non-US Resident"))
+
+
+temp_df$CITIZENSHIP_DON <-  as.factor(temp_df$CITIZENSHIP_DON)
+temp_df$CITIZENSHIP_DON <-  factor(temp_df$CITIZENSHIP_DON, levels = c(1, 2, 3, 4, 5, 6))
+temp_df$CITIZENSHIP_DON <- factor(temp_df$CITIZENSHIP_DON, 
+                                labels =  c("US Citizen", "RESIDENT ALIEN",
+                                "NON-RESIDENT ALIEN, Year Entered US",
+                                "Non-US Citizen/US Resident",
+                                "Non-US Citizen/Non-US Resident, Traveled to US for Reason Other Than Transplant",
+                                "Non-US Citizen/Non-US Resident, Traveled to US for Transplant"))
+                               
+# we will only use one weight variable for both donor and recipient at the time of transplant
+# removing recipient weight at registration
+temp_df <- subset(temp_df, select = -WGT_KG_TCR)
+# removing candidate weight at listing
+temp_df <- subset(temp_df, select = -INIT_WGT_KG)
+# do the same for height
+# removing recipient height at registration
+temp_df <- subset(temp_df, select = -HGT_CM_TCR)
+# removing candidate height at listing
+temp_df <- subset(temp_df, select = -INIT_HGT_CM)
+
+# remove extreme values in weight and height
+temp_df <- temp_df %>%
+  dplyr::filter(WGT_KG_DON_CALC >= quantile(WGT_KG_DON_CALC, 0.0001, na.rm = TRUE),
+         WGT_KG_CALC >= quantile(WGT_KG_CALC, 0.0001, na.rm = TRUE),
+         HGT_CM_DON_CALC >= quantile(HGT_CM_DON_CALC, 0.0001, na.rm = TRUE),
+         HGT_CM_CALC >= quantile(HGT_CM_CALC, 0.0001, na.rm = TRUE))
+
+
+
+
+# Calculate percentage of each category in every column
+col_pct <- apply(temp_df, 2, function(x) max(table(x)) / length(x))
+# Drop variables containing more than 90% of observations belong to one category
+temp_df_filter <- temp_df[, which(col_pct < 0.9)]
+# Print filtered data for reference
+print(temp_df_filter)
+# Using sapply and is.factor to count the number of categorical columns
+cat_cols_count <- sum(sapply(temp_df_filter, is.factor))
+# Displaying the result
+cat_cols_count
+
+
+
+
 
 #there were two start dates in the data, so I decided to use the first one
 #liver$`VAR START DATE`[51] <- "1990-10-01"
-
-
-
-
-
 
 
 # Remove columns from the dataset
