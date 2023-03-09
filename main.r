@@ -9,7 +9,7 @@ pacman::p_load(AUC, Biocomb, car, caret, conflicted, DataExplorer, # important f
 )
 
 #directory for the custom functions
-source("https://raw.githubusercontent.com/Ying-Ju/heart_transplant.github.io/master/custom_functions.R") # nolint: line_length_linter.
+#source("https://raw.githubusercontent.com/Ying-Ju/heart_transplant.github.io/master/custom_functions.R") # nolint: line_length_linter.
 
 
 library(dplyr)
@@ -27,7 +27,7 @@ library(gridExtra)
 # GETTING THE COLUMN NAMES FROM Liver DATA
 
 # Set the path to the HTML file
-html_path1 <- "/Users/kyimoetun/Downloads/UNOS/Copy of Delimited Text File 202112/Deceased Donor/DECEASED_DONOR_DATA.html" # nolint
+html_path1 <- "/Users/kyimoetun/Downloads/UNOS/Copy of Delimited Text File 202112/Deceased Donor/DECEASED_DONOR_DATA.html" 
 
 # Read the HTML content
 html_content1 <- read_html(html_path1)
@@ -58,8 +58,6 @@ for (row in html_nodes(html_nodes(html_content2, "table"), "tr")[-1]) {
 
 # Print the number of labels
 print(length(labels2))
-
-
 
 
 #path for the data files
@@ -129,7 +127,7 @@ missing_table <- tibble(
   percent_missing = round(colSums(is.na(temp_df)) / nrow(temp_df) * 100, 2)
 ) %>% 
   arrange(desc(percent_missing))
-# Get column names with missing values greater than 40 percent
+# Get column names with missing values greater than 90 percent
 remove_cols <- names(which(missing_prop > 0.9))
 # Remove columns from dataframe
 temp_df <- temp_df %>% select(-all_of(remove_cols))
@@ -147,8 +145,8 @@ temp_df$CITIZENSHIP <- factor(temp_df$CITIZENSHIP ,
 temp_df$CITIZENSHIP_DON <-  as.factor(temp_df$CITIZENSHIP_DON)
 temp_df$CITIZENSHIP_DON <-  factor(temp_df$CITIZENSHIP_DON, levels = c(1, 2, 3, 4, 5, 6))
 temp_df$CITIZENSHIP_DON <- factor(temp_df$CITIZENSHIP_DON, 
-                                labels =  c("US Citizen", "RESIDENT ALIEN",
-                                "NON-RESIDENT ALIEN, Year Entered US",
+                                labels =  c("US Citizen", "Resident Alien",
+                                "Non-Resident Alien, Year Entered US",
                                 "Non-US Citizen/US Resident",
                                 "Non-US Citizen/Non-US Resident, Traveled to US for Reason Other Than Transplant",
                                 "Non-US Citizen/Non-US Resident, Traveled to US for Transplant"))
