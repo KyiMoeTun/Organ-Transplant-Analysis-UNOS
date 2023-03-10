@@ -242,7 +242,6 @@ table(dcs_dnr$COD_CAD_DON)
 liver$PTIME
 
 
-
 # create a dummy dataframe with one numeric and one factor variable
 kk <- data.frame(
   col1 = c(1, 2, 3, NA),
